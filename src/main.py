@@ -1,15 +1,7 @@
-from tkinter import *
-from gui import *
-from swipe import *
 from reader import *
-from fabman import *
-from sheets import *
 from threading import Thread
-from UserWelcome import *
-from ManualFill import *
 import global_
 import socket
-import tkinter
 
 debug = 0
 
@@ -22,11 +14,12 @@ def is_connected():
         pass
     return False
 
+def getDatetime(self):
+    return datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
+
 ##############################################################
 # This acts as the main loop of the program, ran in a thread #
 ##############################################################
-
-no_wifi_shown = False
 
 def myLoop(app, reader):
     global no_wifi_shown, no_wifi
@@ -40,11 +33,6 @@ def myLoop(app, reader):
         if in_waiting >= 14:
             if not is_connected():
                 print("ERROR wifi is not connected")
-                no_wifi_shown=True
-                no_wifi = Label(app.get_frame(MainPage), text="ERROR, connection cannot be established, please let staff know.")
-                no_wifi.pack(pady=40)
-                no_wifi.after(4000, lambda: destroyNoWifiError(no_wifi))
-            app.get_frame(ManualFill).clearEntries()
             tag = reader.grabRFID()
             if tag == last_tag and not reader.canScanAgain(last_time):
                 print("Suppressing repeat scan")
@@ -64,82 +52,28 @@ def myLoop(app, reader):
             user_db = global_.user_db
             user_data = user_db.get_all_records(numericise_ignore=["all"])
 
-            # Get a list of all waiver signatures
-            waiver_db = global_.waiver_db
-            waiver_data = waiver_db.get_all_records(numericise_ignore=["all"])
-
             curr_user = "None"
-            curr_user_w = "None"
 
             for i in user_data:
                 if i["Card UUID"] == tag:
                     curr_user = i
             
-            if curr_user != "None" :
-                for i in waiver_data:
-                    user_id = i["A_Number"]
-                    waiver_id = curr_user["Student ID"]
-                    
-                    #TODO
-                    print(waiver_id + "=" + user_id)
-                        
-                    if (user_id[0] == "A") or (user_id[0] == "a"):
-                        user_id = user_id[1:]
-                        
-                    if (waiver_id[0] == "A") or (waiver_id[0] == "a"):
-                        waiver_id = waiver_id[1:]  
-                            
-                    if user_id == waiver_id:
-                        curr_user_w = i
-                        
-            ############################     
-            # All scenarios for ID tap #
-            ############################
-            
-            if curr_user == "None" and curr_user_w == "None":
+            if curr_user == "None":
                 print("User was not found in the database")
-                app.show_frame(NoAccNoWaiver)
-                app.after(4000, lambda: app.show_frame(NoAccNoWaiverSwipe))
-            elif curr_user_w == "None":
-                print("User does not have waiver")
-                app.show_frame(AccNoWaiver)
-                app.after(4000, lambda: app.show_frame(AccNoWaiverSwipe))
-            elif curr_user == "None":
-                print("User has a waiver but no account")
-                app.show_frame(WaiverNoAcc)
-                app.after(4000, lambda: app.show_frame(WaiverNoAccSwipe))
             else:
-                new_row = [util.getDatetime(), int(time.time()), curr_user["Name"], str(tag), "User Checkin", "", "", ""]
+                new_row = [getDatetime(), int(time.time()), curr_user["Name"], str(tag), "User Checkin", "", "", ""]
                 activity_log = global_.activity_log
                 activity_log.append_row(new_row)
-                global_.app.get_frame(UserWelcome).displayName(curr_user["Name"])
 
             last_time = time.time()
             last_tag = tag
 
             reader.readSerial()
     
-    
-def destroyNoWifiError(no_wifi):
-    global no_wifi_shown
-    no_wifi.destroy()
-    no_wifi_shown = False
-
-def clearAndReturn():
-    global_.app.show_frame(MainPage)
-    global_.app.get_frame(ManualFill).clearEntries()
-    
 if __name__ == "__main__":
     global_.init()
-    app = gui()
-    global_.setApp(app)
-    sw = swipe()
     reader = Reader()
-    util = utils()
-    thread = Thread(target=myLoop, args=(app, reader))
+    thread = Thread(target=myLoop, args=(reader))
     print("Starting thread")
     thread.start()
-    app.bind("<Key>", lambda i: sw.keyboardPress(i))
-    app.bind("<Escape>", lambda i: clearAndReturn())
-    print("Made it to app start")
-    app.start()
+    print("Made it to thread start")
