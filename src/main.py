@@ -73,7 +73,6 @@ def myLoop(app, reader):
 if __name__ == "__main__":
     global_.init()
     reader = Reader()
-    thread = Thread(target=myLoop, args=(reader))
+    myLoop(reader)
     print("Starting thread")
-    thread.start()
     print("Made it to thread start")
