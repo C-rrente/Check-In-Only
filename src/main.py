@@ -23,7 +23,7 @@ def getDatetime():
 # This acts as the main loop of the program, ran in a thread #
 ##############################################################
 
-def myLoop(app):
+def myLoop():
     global reader
     global no_wifi_shown, no_wifi
     print("Now reading ID Card")
