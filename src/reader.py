@@ -1,6 +1,5 @@
 from threading import Thread
 from os.path import exists
-from datetime import datetime
 import serial
 import time
 import requests

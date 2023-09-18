@@ -1,7 +1,9 @@
 from reader import *
 from threading import Thread
+from datetime import datetime
 import global_
 import socket
+import time
 
 debug = 0
 
@@ -14,14 +16,15 @@ def is_connected():
         pass
     return False
 
-def getDatetime(self):
-    return datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
+def getDatetime():
+    return datetime.now().strftime("%m/%d/%Y %H:%M:%S")
 
 ##############################################################
 # This acts as the main loop of the program, ran in a thread #
 ##############################################################
 
-def myLoop(app, reader):
+def myLoop(app):
+    global reader
     global no_wifi_shown, no_wifi
     print("Now reading ID Card")
     last_tag = 0
@@ -72,7 +75,8 @@ def myLoop(app, reader):
     
 if __name__ == "__main__":
     global_.init()
+    global reader
     reader = Reader()
-    myLoop(reader)
+    myLoop()
     print("Starting thread")
     print("Made it to thread start")
